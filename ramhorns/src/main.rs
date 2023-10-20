@@ -6,14 +6,17 @@ fn main() {
     let v1 = Sa {
         prop1: vec![Value::new(1), Value::new(2)],
         prop2: 12,
+        #[cfg(feature = "chrono_support")]
+        create_time: chrono::Utc::now().naive_utc(),
     };
     let s = "
             {{?prop1}}
                 {{#prop1}}
-                   {{value}} , {{prop2}} abcd
+                   {{value}} , {{prop2}} , create_time: {{create_time}}
                 {{/prop1}}
             {{/prop1}}
     ";
+    
     let tpl = Template::new(s).unwrap();
     let rst = tpl.render(&v1);
     println!("rst = {}", rst);
@@ -23,6 +26,8 @@ fn main() {
 struct Sa {
     prop1: Vec<Value<u8>>,
     prop2: i32,
+    #[cfg(feature = "chrono_support")]
+    create_time: chrono::NaiveDateTime,
 }
 
 #[allow(unused)]

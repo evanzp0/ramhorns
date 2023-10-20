@@ -864,3 +864,42 @@ impl Content for beef::lean::Cow<'_, str> {
         encoder.write_unescaped(self)
     }
 }
+
+#[cfg(feature = "chrono_support")]
+impl Content for chrono::NaiveDateTime {
+    #[inline]
+    fn is_truthy(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    fn capacity_hint(&self, _tpl: &Template) -> usize {
+        5
+    }
+
+    #[inline]
+    fn render_escaped<E: Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
+        encoder.format_unescaped(self)
+    }
+}
+
+#[cfg(feature = "chrono_support")]
+impl<Tz: chrono::offset::TimeZone> Content for chrono::DateTime<Tz> 
+where
+    Tz::Offset: core::fmt::Display,
+{
+    #[inline]
+    fn is_truthy(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    fn capacity_hint(&self, _tpl: &Template) -> usize {
+        5
+    }
+
+    #[inline]
+    fn render_escaped<E: Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
+        encoder.format_unescaped(self)
+    }
+}

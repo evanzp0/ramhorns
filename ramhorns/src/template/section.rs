@@ -108,9 +108,6 @@ where
                     index += block.children as usize;
                 }
                 Tag::NotNone => {
-                    let section = self.slice(index..index + block.children as usize);
-
-                    println!("section.blocks : {:?}", section.blocks);
                     let rst = self.contents.render_field_notnone_section(
                         block.hash,
                         block.name,
