@@ -94,6 +94,22 @@ pub trait ContentSequence: Combine + Sized + Copy {
     {
         Ok(())
     }
+
+    /// Render a field by the hash **or** string of its name, as a section.
+    #[inline]
+    fn render_field_notnone_section<'section, P, E>(
+        &self,
+        _hash: u64,
+        _name: &str,
+        _section: Section<'section, P>,
+        _encoder: &mut E,
+    ) -> Result<bool, E::Error>
+    where
+        P: ContentSequence,
+        E: Encoder,
+    {
+        Ok(false)
+    }
 }
 
 impl Combine for () {
@@ -220,5 +236,33 @@ where
             section.render(encoder)?;
         }
         Ok(())
+    }
+
+    #[inline]
+    fn render_field_notnone_section<P, E>(
+        &self,
+        hash: u64,
+        name: &str,
+        section: Section<P>,
+        encoder: &mut E,
+    ) -> Result<bool, E::Error>
+    where
+        P: ContentSequence,
+        E: Encoder,
+    {
+        let mut rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
+        if rst {
+            let section = section.without_last();
+            rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
+            if rst {
+                let section = section.without_last();
+                rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
+                if rst {
+                    let section = section.without_last();
+                    rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
+                }
+            }
+        }
+        Ok(rst)
     }
 }

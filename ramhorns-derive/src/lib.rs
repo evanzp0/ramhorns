@@ -220,6 +220,13 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
         }
     });
 
+    let render_field_notnone_section = fields.iter().map(|Field { field, hash, .. }| {
+        quote! {
+            // #hash => self.#field.render_notnone_section(section, encoder).map(|_| true),
+            #hash => Ok(self.#field.is_truthy()),
+        }
+    });
+
     let flatten = &*flatten;
     let fields = fields.iter().map(|Field { field, .. }| field);
 
@@ -300,6 +307,20 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
                     #( #render_field_inverse )*
                     _ => Ok(
                         #( self.#flatten.render_field_inverse(hash, name, section, encoder)? ||)*
+                        false
+                    )
+                }
+            }
+
+            fn render_field_notnone_section<P, E>(&self, hash: u64, name: &str, section: ::ramhorns::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
+            where
+                P: ::ramhorns::traits::ContentSequence,
+                E: ::ramhorns::encoding::Encoder,
+            {
+                match hash {
+                    #( #render_field_notnone_section )*
+                    _ => Ok(
+                        #( self.#flatten.render_field_notnull_section(hash, name, section, encoder)? ||)*
                         false
                     )
                 }

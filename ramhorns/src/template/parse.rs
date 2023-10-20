@@ -53,6 +53,10 @@ pub enum Tag {
     #[token("{{>")]
     Partial,
 
+    /// `{{?not_none}}` tag
+    #[token("{{?")]
+    NotNone,
+
     /// Tailing html
     Tail,
 }
@@ -68,6 +72,8 @@ impl From<ParseError> for Error {
     skip r"[ ]+",
     extras = Braces,
 )]
+
+#[derive(Debug)]
 enum Closing {
     #[token("}}", |lex| {
         // Force fail the match if we expected 3 braces
@@ -107,6 +113,8 @@ impl<'tpl> Template<'tpl> {
         while let Some(tag) = lex.next() {
             let tag = tag?;
 
+            println!("tag = {:?}", tag);
+
             // Grab HTML from before the token
             // TODO: add lex.before() that yields source slice
             // in front of the token:
@@ -114,6 +122,9 @@ impl<'tpl> Template<'tpl> {
             // let html = &lex.before()[last..];
             let mut html = &lex.source()[last..lex.span().start];
             self.capacity_hint += html.len();
+
+            println!("html = {:?}", html);
+            println!("html len = {}", html.len());
 
             // Morphing the lexer to match the closing
             // braces and grab the name
@@ -126,6 +137,9 @@ impl<'tpl> Template<'tpl> {
             }
             let mut name = closing.slice();
 
+            println!("_tok = {:?}", _tok);
+            println!("name = {:?}", name);
+
             match tag {
                 Tag::Escaped | Tag::Unescaped => {
                     loop {
@@ -134,9 +148,12 @@ impl<'tpl> Template<'tpl> {
                                 self.blocks.push(Block::new(html, name, Tag::Section));
                                 name = closing.slice();
                                 html = "";
+
+                                println!("Tag::Escaped; name = {:?}", name);
                             }
                             Some(Ok(Closing::Match)) => {
                                 self.blocks.push(Block::new(html, name, tag));
+                                println!("Tag::Escaped; Match: name = {}, tag = {:?}", name, tag);
                                 break;
                             }
                             _ => return Err(Error::UnclosedTag),
@@ -155,15 +172,35 @@ impl<'tpl> Template<'tpl> {
                             self.blocks.push(Block::new(html, name, Tag::Section));
                             name = closing.slice();
                             html = "";
+                            println!("Tag::Section; name = {:?}", name);
                         }
                         Some(Ok(Closing::Match)) => {
                             stack.try_push(self.blocks.len())?;
                             self.blocks.push(Block::new(html, name, tag));
+                            println!("Tag::Section; Match: name = {}, tag = {:?}", name, tag);
                             break;
                         }
                         _ => return Err(Error::UnclosedTag),
                     }
                 },
+                Tag::NotNone => loop {
+                    match closing.next() {
+                        Some(Ok(Closing::Ident)) => {
+                            stack.try_push(self.blocks.len())?;
+                            self.blocks.push(Block::new(html, name, Tag::NotNone));
+                            name = closing.slice();
+                            html = "";
+                            println!("Tag::NotNone; name = {:?}", name);
+                        }
+                        Some(Ok(Closing::Match)) => {
+                            stack.try_push(self.blocks.len())?;
+                            self.blocks.push(Block::new(html, name, tag));
+                            println!("Tag::NotNone; Match: name = {}, tag = {:?}", name, tag);
+                            break;
+                        }
+                        _ => return Err(Error::UnclosedTag),
+                    }
+                }
                 Tag::Closing => {
                     self.blocks.push(Block::nameless(html, Tag::Closing));
 
@@ -226,5 +263,23 @@ impl<'tpl> Template<'tpl> {
         }
 
         Ok(last)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Template;
+
+    #[test]
+    fn test() {
+        let s = "
+        {{?t1}}
+            {{#t1}}
+                {{name}}abcd
+            {{/t1}}
+        {{/t1}}
+        ";
+        let _tpl = Template::new(s).unwrap();
+        println!("--------------")
     }
 }

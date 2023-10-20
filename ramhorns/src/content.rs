@@ -86,6 +86,24 @@ pub trait Content {
         }
     }
 
+    /// Render a section with self.
+    #[inline]
+    fn render_notnone_section<C, E>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        if self.is_truthy() {
+            section.render(encoder)
+        } else {
+            Ok(())
+        }
+    }
+
     /// Render a field by the hash **or** string of its name.
     ///
     /// This will escape HTML characters, eg: `<` will become `&lt;`.
@@ -146,6 +164,23 @@ pub trait Content {
         E: Encoder,
     {
         Ok(false)
+    }
+
+    /// Render a field by the hash **or** string of its name, as a section.
+    /// If successful, returns `true` if the field exists in this content, otherwise `false`.
+    #[inline]
+    fn render_field_notnone_section<C, E>(
+        &self,
+        _hash: u64,
+        _name: &str,
+        _section: Section<C>,
+        _encoder: &mut E,
+    ) -> Result<bool, E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        Ok(true)
     }
 }
 
@@ -736,7 +771,11 @@ macro_rules! impl_pointer_types {
                     C: ContentSequence,
                     E: Encoder,
                 {
-                    self.deref().render_field_section(hash, name, section, encoder)
+                    let def = self.deref();
+                    
+                    let rst = def.render_field_section(hash, name, section, encoder)?;
+
+                    Ok(rst)
                 }
 
                 #[inline]
@@ -752,6 +791,23 @@ macro_rules! impl_pointer_types {
                     E: Encoder,
                 {
                     self.deref().render_field_inverse(hash, name, section, encoder)
+                }
+
+                #[inline]
+                fn render_field_notnone_section<C, E>(
+                    &self,
+                    hash: u64,
+                    name: &str,
+                    section: Section<C>,
+                    encoder: &mut E,
+                ) -> Result<bool, E::Error>
+                where
+                    C: ContentSequence,
+                    E: Encoder,
+                {
+                    let def = self.deref();
+                    let rst = def.render_field_notnone_section(hash, name, section, encoder)?;
+                    Ok(rst)
                 }
             }
         )*
