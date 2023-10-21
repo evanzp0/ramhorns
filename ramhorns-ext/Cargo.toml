@@ -1,12 +1,12 @@
 [package]
 name = "ramhorns-ext"
 version = "0.14.0"
-authors = ["Maciej Hirsz <hello@maciej.codes>"]
+authors = ["Evan Zhang <evanzp0@qq.com>"]
 license = "GPL-3.0"
 edition = "2018"
 description = "Experimental Mustache-like templating engine."
-repository = "https://github.com/maciejhirsz/ramhorns"
-documentation = "https://docs.rs/ramhorns"
+repository = "https://github.com/evanzp0/ramhorns-ext"
+documentation = "https://docs.rs/ramhorns-ext"
 readme = "../README.md"
 keywords = ["html", "template", "mustache", "ramhorns"]
 categories = ["template-engine"]
