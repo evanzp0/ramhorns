@@ -1,6 +1,6 @@
 
 extern crate std;
-use ramhorns::Template;
+use ramhorns_ext::Template;
 use ramhorns_derive::Content;
 fn main() {
     let v1 = Sa {

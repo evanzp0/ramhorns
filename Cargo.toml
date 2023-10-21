@@ -1,12 +1,12 @@
 [workspace]
 members = [
-    "ramhorns",
-    "ramhorns-derive",
+    "ramhorns-ext",
+    "ramhorns-derive-ext",
     "tests",
 ]
 
 [patch.crates-io]
-ramhorns-derive = { path = "./ramhorns-derive" }
+ramhorns-derive-ext = { path = "./ramhorns-derive-ext" }
 
 [profile.bench]
 lto = "fat"

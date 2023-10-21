@@ -88,7 +88,7 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
     };
 
     let mut flatten = Vec::new();
-    let md_callback: Path = syn::parse(quote!(::ramhorns::encoding::encode_cmark).into()).unwrap();
+    let md_callback: Path = syn::parse(quote!(::ramhorns_ext::encoding::encode_cmark).into()).unwrap();
     let mut fields = fields
         .enumerate()
         .filter_map(|(index, field)| {
@@ -231,7 +231,7 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
     let fields = fields.iter().map(|Field { field, .. }| field);
 
     let where_clause = type_params
-        .map(|param| quote!(#param: ::ramhorns::Content))
+        .map(|param| quote!(#param: ::ramhorns_ext::Content))
         .collect::<Vec<_>>();
     let where_clause = if !where_clause.is_empty() {
         quote!(where #(#where_clause),*)
@@ -241,17 +241,17 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
 
     // FIXME: decouple lifetimes from actual generics with trait boundaries
     let tokens = quote! {
-        impl#generics ::ramhorns::Content for #name#generics #where_clause {
+        impl#generics ::ramhorns_ext::Content for #name#generics #where_clause {
             #[inline]
-            fn capacity_hint(&self, tpl: &::ramhorns::Template) -> usize {
+            fn capacity_hint(&self, tpl: &::ramhorns_ext::Template) -> usize {
                 tpl.capacity_hint() #( + self.#fields.capacity_hint(tpl) )*
             }
 
             #[inline]
-            fn render_section<C, E>(&self, section: ::ramhorns::Section<C>, encoder: &mut E) -> std::result::Result<(), E::Error>
+            fn render_section<C, E>(&self, section: ::ramhorns_ext::Section<C>, encoder: &mut E) -> std::result::Result<(), E::Error>
             where
-                C: ::ramhorns::traits::ContentSequence,
-                E: ::ramhorns::encoding::Encoder,
+                C: ::ramhorns_ext::traits::ContentSequence,
+                E: ::ramhorns_ext::encoding::Encoder,
             {
                 section.with(self).render(encoder)
             }
@@ -259,7 +259,7 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
             #[inline]
             fn render_field_escaped<E>(&self, hash: u64, name: &str, encoder: &mut E) -> std::result::Result<bool, E::Error>
             where
-                E: ::ramhorns::encoding::Encoder,
+                E: ::ramhorns_ext::encoding::Encoder,
             {
                 match hash {
                     #( #render_field_escaped )*
@@ -273,7 +273,7 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
             #[inline]
             fn render_field_unescaped<E>(&self, hash: u64, name: &str, encoder: &mut E) -> std::result::Result<bool, E::Error>
             where
-                E: ::ramhorns::encoding::Encoder,
+                E: ::ramhorns_ext::encoding::Encoder,
             {
                 match hash {
                     #( #render_field_unescaped )*
@@ -284,10 +284,10 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn render_field_section<P, E>(&self, hash: u64, name: &str, section: ::ramhorns::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
+            fn render_field_section<P, E>(&self, hash: u64, name: &str, section: ::ramhorns_ext::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
             where
-                P: ::ramhorns::traits::ContentSequence,
-                E: ::ramhorns::encoding::Encoder,
+                P: ::ramhorns_ext::traits::ContentSequence,
+                E: ::ramhorns_ext::encoding::Encoder,
             {
                 match hash {
                     #( #render_field_section )*
@@ -298,10 +298,10 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn render_field_inverse<P, E>(&self, hash: u64, name: &str, section: ::ramhorns::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
+            fn render_field_inverse<P, E>(&self, hash: u64, name: &str, section: ::ramhorns_ext::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
             where
-                P: ::ramhorns::traits::ContentSequence,
-                E: ::ramhorns::encoding::Encoder,
+                P: ::ramhorns_ext::traits::ContentSequence,
+                E: ::ramhorns_ext::encoding::Encoder,
             {
                 match hash {
                     #( #render_field_inverse )*
@@ -312,10 +312,10 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn render_field_notnone_section<P, E>(&self, hash: u64, name: &str, section: ::ramhorns::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
+            fn render_field_notnone_section<P, E>(&self, hash: u64, name: &str, section: ::ramhorns_ext::Section<P>, encoder: &mut E) -> std::result::Result<bool, E::Error>
             where
-                P: ::ramhorns::traits::ContentSequence,
-                E: ::ramhorns::encoding::Encoder,
+                P: ::ramhorns_ext::traits::ContentSequence,
+                E: ::ramhorns_ext::encoding::Encoder,
             {
                 match hash {
                     #( #render_field_notnone_section )*

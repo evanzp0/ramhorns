@@ -7,7 +7,7 @@ repository = "https://github.com/maciejhirsz/ramhorns"
 edition = "2018"
 
 [dev-dependencies]
-ramhorns = { path = "../ramhorns" }
+ramhorns-ext = { path = "../ramhorns-ext" }
 askama = "0.9"
 handlebars = "3.1.0-beta.2"
 serde = "1.0"

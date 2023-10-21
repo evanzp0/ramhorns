@@ -1,4 +1,4 @@
-use ramhorns::{Content, Ramhorns, Template};
+use ramhorns_ext::{Content, Ramhorns, Template};
 
 #[derive(Content)]
 struct Post<'a> {
@@ -479,7 +479,7 @@ fn can_render_markdown() {
 fn can_render_callback() {
     fn double<E>(s: &str, enc: &mut E) -> Result<(), E::Error>
     where
-        E: ramhorns::encoding::Encoder,
+        E: ramhorns_ext::encoding::Encoder,
     {
         enc.write_escaped(s)?;
         enc.write_escaped("+")?;
@@ -765,7 +765,7 @@ fn simple_partials_extend() {
 
 #[test]
 fn illegal_partials() {
-    use ramhorns::Error;
+    use ramhorns_ext::Error;
 
     let mut tpls: Ramhorns = Ramhorns::lazy("templates").unwrap();
 

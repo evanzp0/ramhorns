@@ -1,16 +1,7 @@
-<img src="https://raw.githubusercontent.com/maciejhirsz/ramhorns/master/ramhorns.svg?sanitize=true" alt="Ramhorns logo" width="250" align="right">
-
-# Ramhorns
-
-[![Tests badge](https://github.com/maciejhirsz/ramhorns/workflows/tests/badge.svg?branch=master)](https://github.com/maciejhirsz/ramhorns/actions?query=workflow%3Atests)
-[![Crates.io version badge](https://img.shields.io/crates/v/ramhorns.svg)](https://crates.io/crates/ramhorns)
-[![Docs](https://docs.rs/ramhorns/badge.svg)](https://docs.rs/ramhorns)
-[![Crates.io license badge](https://img.shields.io/crates/l/ramhorns.svg)](https://crates.io/crates/ramhorns)
-
 Fast [**Mustache**](https://mustache.github.io/) template engine implementation
 in pure Rust.
 
-**Ramhorns** loads and processes templates **at runtime**. It comes with a derive macro
+**Ramhorns-ext** is base on **Ramhorns**, it loads and processes templates **at runtime**. It comes with a derive macro
 which allows for templates to be rendered from native Rust data structures without doing
 temporary allocations, intermediate `HashMap`s or what have you.
 
@@ -25,16 +16,18 @@ What else do you want, a sticker?
 
 ```toml
 [dependencies]
-ramhorns = "0.5"
+ramhorns-ext = { version = "0.4", features = ["chrono", "uuid"] }
 ```
 
 ### Example
 
 ```rust
-use ramhorns::{Template, Content};
+use ramhorns_ext::{Template, Content};
 
 #[derive(Content)]
 struct Post<'a> {
+    id: uuid::Uuid,
+    create_time: chrono::NaiveDateTime,
     title: &'a str,
     teaser: &'a str,
 }
@@ -47,7 +40,7 @@ struct Blog<'a> {
 
 // Standard Mustache action here
 let source = "<h1>{{title}}</h1>\
-              {{#posts}}<article><h2>{{title}}</h2><p>{{teaser}}</p></article>{{/posts}}\
+              {{#posts}}<article><h2>{{id}}</h2><h2>{{title}}</h2><p>{{teaser}}</p></article>{{/posts}}\
               {{^posts}}<p>No posts yet :(</p>{{/posts}}";
 
 let tpl = Template::new(source).unwrap();
@@ -56,10 +49,14 @@ let rendered = tpl.render(&Blog {
     title: "My Awesome Blog!".to_string(),
     posts: vec![
         Post {
+            id: uuid::Uuid::parse_str("02f09a3f-1624-3b1d-8409-44eff7708201").unwrap(),
+            create_time: chrono::Utc::now().naive_utc(),
             title: "How I tried Ramhorns and found love 💖",
             teaser: "This can happen to you too",
         },
         Post {
+            id: uuid::Uuid::parse_str("12f09a3f-1624-3b1d-8409-44eff7708202").unwrap(),
+            create_time: chrono::Utc::now().naive_utc(),
             title: "Rust is kinda awesome",
             teaser: "Yes, even the borrow checker! 🦀",
         },
@@ -68,10 +65,12 @@ let rendered = tpl.render(&Blog {
 
 assert_eq!(rendered, "<h1>My Awesome Blog!</h1>\
                       <article>\
+                          <h2>02f09a3f-1624-3b1d-8409-44eff7708201</h2>\
                           <h2>How I tried Ramhorns and found love 💖</h2>\
                           <p>This can happen to you too</p>\
                       </article>\
                       <article>\
+                          <h2>12f09a3f-1624-3b1d-8409-44eff7708202</h2>\
                           <h2>Rust is kinda awesome</h2>\
                           <p>Yes, even the borrow checker! 🦀</p>\
                       </article>");
@@ -79,6 +78,8 @@ assert_eq!(rendered, "<h1>My Awesome Blog!</h1>\
 
 ### Features
 
++ uuid and chrono DateTime support
++ Rendering sections `{{?foo}} ... {{/foo}}`.
 + Rendering common types, such as `&str`, `String`, `bool`s, and numbers into `{{variables}}`.
 + Unescaped printing with `{{{tripple-brace}}}` or `{{&ampersant}}`.
 + Rendering sections `{{#foo}} ... {{/foo}}`.
