@@ -6,13 +6,15 @@ fn main() {
     let v1 = Sa {
         prop1: vec![Value::new(1), Value::new(2)],
         prop2: 12,
-        #[cfg(feature = "chrono_support")]
+        #[cfg(feature = "chrono")]
         create_time: chrono::Utc::now().naive_utc(),
+        #[cfg(feature = "uuid")]
+        id: uuid::Uuid::parse_str("02f09a3f-1624-3b1d-8409-44eff7708208").unwrap(),
     };
     let s = "
             {{?prop1}}
                 {{#prop1}}
-                   {{value}} , {{prop2}} , create_time: {{create_time}}
+                   {{value}} , id: {{id}}, {{prop2}} , create_time: {{create_time}}
                 {{/prop1}}
             {{/prop1}}
     ";
@@ -26,8 +28,10 @@ fn main() {
 struct Sa {
     prop1: Vec<Value<u8>>,
     prop2: i32,
-    #[cfg(feature = "chrono_support")]
+    #[cfg(feature = "chrono")]
     create_time: chrono::NaiveDateTime,
+    #[cfg(feature = "uuid")]
+    id: uuid::Uuid,
 }
 
 #[allow(unused)]

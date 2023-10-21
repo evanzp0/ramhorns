@@ -865,7 +865,7 @@ impl Content for beef::lean::Cow<'_, str> {
     }
 }
 
-#[cfg(feature = "chrono_support")]
+#[cfg(feature = "chrono")]
 impl Content for chrono::NaiveDateTime {
     #[inline]
     fn is_truthy(&self) -> bool {
@@ -883,7 +883,7 @@ impl Content for chrono::NaiveDateTime {
     }
 }
 
-#[cfg(feature = "chrono_support")]
+#[cfg(feature = "chrono")]
 impl<Tz: chrono::offset::TimeZone> Content for chrono::DateTime<Tz> 
 where
     Tz::Offset: core::fmt::Display,
@@ -896,6 +896,24 @@ where
     #[inline]
     fn capacity_hint(&self, _tpl: &Template) -> usize {
         5
+    }
+
+    #[inline]
+    fn render_escaped<E: Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
+        encoder.format_unescaped(self)
+    }
+}
+
+#[cfg(feature = "uuid")]
+impl Content for uuid::Uuid {
+    #[inline]
+    fn is_truthy(&self) -> bool {
+        !self.is_nil()
+    }
+
+    #[inline]
+    fn capacity_hint(&self, _tpl: &Template) -> usize {
+        32
     }
 
     #[inline]
