@@ -320,7 +320,7 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
                 match hash {
                     #( #render_field_notnone_section )*
                     _ => Ok(
-                        #( self.#flatten.render_field_notnull_section(hash, name, section, encoder)? ||)*
+                        #( self.#flatten.render_field_notnone_section(hash, name, section, encoder)? ||)*
                         false
                     )
                 }
