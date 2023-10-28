@@ -25,6 +25,7 @@ mod section;
 pub use section::Section;
 pub use parse::Tag;
 
+#[derive(Debug)]
 /// A preprocessed form of the plain text template, ready to be rendered
 /// with data contained in types implementing the `Content` trait.
 pub struct Template<'tpl> {
@@ -65,8 +66,9 @@ impl<'tpl> Template<'tpl> {
             capacity_hint: 0,
             source,
         };
-
+        println!("tpl = {:?}", tpl);
         let last = tpl.parse(unsafe_source, partials)?;
+        println!("last = {:?}", last);
         let tail = &unsafe_source[last..].trim_end();
         tpl.blocks.push(Block::nameless(tail, Tag::Tail));
         tpl.capacity_hint += tail.len();
@@ -89,7 +91,10 @@ impl<'tpl> Template<'tpl> {
         let mut buf = String::with_capacity(capacity);
 
         // Ignore the result, cannot fail
-        let _ = Section::new(&self.blocks).with(content).render(&mut buf);
+        let rst = Section::new(&self.blocks)
+            .with(content);
+        
+        let _ = rst.render(&mut buf, Option::<&()>::None);
 
         buf
     }
@@ -103,7 +108,7 @@ impl<'tpl> Template<'tpl> {
         let mut encoder = EscapingIOEncoder::new(writer);
         Section::new(&self.blocks)
             .with(content)
-            .render(&mut encoder)
+            .render(&mut encoder, Option::<&()>::None)
     }
 
     /// Render this `Template` with a given `Content` to a file.
@@ -119,7 +124,7 @@ impl<'tpl> Template<'tpl> {
 
         Section::new(&self.blocks)
             .with(content)
-            .render(&mut encoder)
+            .render(&mut encoder, Option::<&()>::None)
     }
 
     /// Get a reference to a source this `Template` was created from.
@@ -246,7 +251,7 @@ mod test {
 
     #[test]
     fn constructs_nested_sections_with_dot_correctly() {
-        let source = "<body><h1>{{site title}}</h1>{{^archive posts}}<article>{{name}}</article>{{/posts archive}}</body>";
+        let source = "<body><h1>{{site title}}</h1>{{^archive posts}}<article>{{name}}</article>{{/archive posts}}</body>";
         let tpl = Template::new(source).unwrap();
 
         assert_eq!(

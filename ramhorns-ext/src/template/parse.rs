@@ -16,9 +16,10 @@ use crate::Partials;
 #[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub struct ParseError;
 
+// r"[^{]+": 跳过非 { 的字符，跳过 \{ 转移的字符
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Logos)]
 #[logos(
-    skip r"[^{]+",
+    skip r"[^{]+", 
     skip r"\{",
     extras = Braces,
     error = ParseError,
@@ -72,10 +73,10 @@ impl From<ParseError> for Error {
     skip r"[ ]+",
     extras = Braces,
 )]
-
 #[derive(Debug)]
 enum Closing {
     #[token("}}", |lex| {
+        // 如果开始的是 {{ 而结尾的 是 }}} ，则报错
         // Force fail the match if we expected 3 braces
         lex.extras != Braces::Three
     })]
@@ -111,6 +112,7 @@ impl<'tpl> Template<'tpl> {
         let mut stack = ArrayVec::<usize, 16>::new();
 
         while let Some(tag) = lex.next() {
+            // 起始 token
             let tag = tag?;
 
             // Grab HTML from before the token
@@ -126,21 +128,25 @@ impl<'tpl> Template<'tpl> {
             let mut closing = lex.morph();
             let tail_idx = self.blocks.len();
 
+            // 获取标识符
             let _tok = closing.next();
             if !matches!(Some(Closing::Ident), _tok) {
                 return Err(Error::UnclosedTag);
             }
+            // 可能是标识符名 或 结束token
             let mut name = closing.slice();
 
             match tag {
                 Tag::Escaped | Tag::Unescaped => {
                     loop {
                         match closing.next() {
+                            // 如果起始为 {{ ，在标识符后又找到空格分隔的下一个标识符
                             Some(Ok(Closing::Ident)) => {
                                 self.blocks.push(Block::new(html, name, Tag::Section));
                                 name = closing.slice();
                                 html = "";
                             }
+                            // 如果起始为 {{ 则，找到 }}
                             Some(Ok(Closing::Match)) => {
                                 self.blocks.push(Block::new(html, name, tag));
                                 break;
@@ -148,21 +154,25 @@ impl<'tpl> Template<'tpl> {
                             _ => return Err(Error::UnclosedTag),
                         }
                     }
-
+                    // block 中本次新增元素数
                     let d = self.blocks.len() - tail_idx - 1;
+
                     for i in 0..d {
-                        self.blocks[tail_idx + i].children = (d - i) as u32;
+                        self.blocks[tail_idx + i].children = (d - i) as u32; //children: 2 1 0 递减
                     }
                 }
                 Tag::Section | Tag::Inverse => loop {
+                    // 如果起始为 {{# ，在标识符后又找到空格分隔的下一个标识符
                     match closing.next() {
                         Some(Ok(Closing::Ident)) => {
+                            // 记录上一层的 block 元素数
                             stack.try_push(self.blocks.len())?;
                             self.blocks.push(Block::new(html, name, Tag::Section));
                             name = closing.slice();
                             html = "";
                         }
                         Some(Ok(Closing::Match)) => {
+                            // }} 时 记录本层的 block 元素数
                             stack.try_push(self.blocks.len())?;
                             self.blocks.push(Block::new(html, name, tag));
                             break;
@@ -195,6 +205,7 @@ impl<'tpl> Template<'tpl> {
                         let head_idx = stack
                             .pop()
                             .ok_or_else(|| Error::UnopenedSection(name.into()))?;
+
                         let head = &mut self.blocks[head_idx];
                         head.children = (tail_idx - head_idx) as u32;
 
@@ -204,16 +215,32 @@ impl<'tpl> Template<'tpl> {
                         Ok(())
                     };
 
-                    pop_section(name)?;
+                    let mut tmp = vec![name];
                     loop {
                         match closing.next() {
                             Some(Ok(Closing::Ident)) => {
-                                pop_section(closing.slice())?;
+                                tmp.push(closing.slice());
                             }
                             Some(Ok(Closing::Match)) => break,
                             _ => return Err(Error::UnclosedTag),
                         }
                     }
+
+                    let t_len = tmp.len();
+                    for i in 0..t_len {
+                        pop_section(tmp[t_len - i - 1])?;
+                    }
+
+                    // pop_section(name)?;
+                    // loop {
+                    //     match closing.next() {
+                    //         Some(Ok(Closing::Ident)) => {
+                    //             pop_section(closing.slice())?;
+                    //         }
+                    //         Some(Ok(Closing::Match)) => break,
+                    //         _ => return Err(Error::UnclosedTag),
+                    //     }
+                    // }
                 }
                 Tag::Partial => {
                     match closing.next() {
@@ -265,6 +292,5 @@ mod tests {
         {{/t1}}
         ";
         let _tpl = Template::new(s).unwrap();
-        println!("--------------")
     }
 }

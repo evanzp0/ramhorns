@@ -16,7 +16,7 @@ What else do you want, a sticker?
 
 ```toml
 [dependencies]
-ramhorns-ext = { version = "0.4", features = ["chrono", "uuid"] }
+ramhorns-ext = { version = "0.15", features = ["chrono", "uuid"] }
 ```
 
 ### Example
@@ -78,6 +78,7 @@ assert_eq!(rendered, "<h1>My Awesome Blog!</h1>\
 
 ### Features
 
++ {{$value}} for Vec<T> etc.
 + uuid and chrono DateTime support
 + Rendering sections `{{?foo}} ... {{/foo}}`.
 + Rendering common types, such as `&str`, `String`, `bool`s, and numbers into `{{variables}}`.

@@ -203,12 +203,19 @@ where
         P: ContentSequence,
         E: Encoder,
     {
-        if !self.3.render_field_section(hash, name, section, encoder)? {
+        let rst = self.3.render_field_section(hash, name, section, encoder)?;
+
+        if !rst {
             let section = section.without_last();
-            if !self.2.render_field_section(hash, name, section, encoder)? {
+
+            let rst = self.2.render_field_section(hash, name, section, encoder)?;
+            if !rst {
                 let section = section.without_last();
-                if !self.1.render_field_section(hash, name, section, encoder)? {
+
+                let rst = self.1.render_field_section(hash, name, section, encoder)?;
+                if !rst {
                     let section = section.without_last();
+
                     self.0.render_field_section(hash, name, section, encoder)?;
                 }
             }
@@ -233,7 +240,7 @@ where
             && !self.1.render_field_inverse(hash, name, section, encoder)?
             && !self.0.render_field_inverse(hash, name, section, encoder)?
         {
-            section.render(encoder)?;
+            section.render(encoder, Option::<&()>::None)?;
         }
         Ok(())
     }
@@ -250,19 +257,23 @@ where
         P: ContentSequence,
         E: Encoder,
     {
-        let mut rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
-        if rst {
+        let rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
+        if !rst {
             let section = section.without_last();
-            rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
-            if rst {
+
+            let rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
+            if !rst {
                 let section = section.without_last();
-                rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
-                if rst {
+
+                let rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
+                if !rst {
                     let section = section.without_last();
-                    rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
+
+                    self.0.render_field_notnone_section(hash, name, section, encoder)?;
                 }
             }
         }
-        Ok(rst)
+
+        Ok(true)
     }
 }
