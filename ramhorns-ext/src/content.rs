@@ -391,10 +391,6 @@ impl<T: Content> Content for Option<T> {
         C: ContentSequence,
         E: Encoder,
     {
-        if let Some(ref item) = self {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -463,11 +459,7 @@ where
         C: ContentSequence,
         E: Encoder,
     {
-        if let Ok(item) = self {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
-        Ok(())
+         Ok(())
     }
 }
 
@@ -506,10 +498,6 @@ impl<T: Content> Content for Vec<T> {
         C: ContentSequence,
         E: Encoder,
     {
-        // for item in self.iter() {
-        //     item.render_notnone_section(section, encoder, Some(item))?;
-        // }
-
         Ok(())
     }
 }
@@ -549,10 +537,6 @@ impl<T: Content> Content for [T] {
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -592,10 +576,6 @@ impl<T: Content, const N: usize> Content for [T; N] {
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -635,10 +615,6 @@ impl<T: Content, const N: usize> Content for ArrayVec<T, N> {
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -745,7 +721,7 @@ where
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_notnone_section(section, encoder, Some(v)).map(|_| true),
+            Some(v) => Ok(true),
             None => Ok(false),
         }
     }
@@ -886,7 +862,7 @@ where
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_inverse(section, encoder, Some(v)).map(|_| true),
+            Some(v) => Ok(true),
             None => Ok(false),
         }
     }
