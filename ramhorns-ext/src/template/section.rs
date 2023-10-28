@@ -15,7 +15,7 @@ use std::ops::Range;
 
 /// A section of a `Template` that can be rendered individually, usually delimited by
 /// `{{#section}} ... {{/section}}` tags.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Section<'section, Contents: ContentSequence> {
     blocks: &'section [Block<'section>],
     contents: Contents,
@@ -28,10 +28,14 @@ type Next<C, X> = (<C as Combine>::I, <C as Combine>::J, <C as Combine>::K, X);
 impl<'section> Section<'section, ()> {
     #[inline]
     pub(crate) fn new(blocks: &'section [Block<'section>]) -> Self {
-        Self {
+        let rst = Self {
             blocks,
             contents: (),
-        }
+        };
+
+        println!("Section<()>: {:?}", rst);
+
+        rst
     }
 }
 
@@ -41,10 +45,14 @@ where
 {
     #[inline]
     fn slice(self, range: Range<usize>) -> Self {
-        Self {
+        let rst = Self {
             blocks: &self.blocks[range],
             contents: self.contents,
-        }
+        };
+
+        println!("Section<C: ContentSequence>: {:?}", rst);
+
+        rst
     }
 
     /// Attach a `Content` to this section. This will keep track of a stack up to
@@ -52,48 +60,76 @@ where
     #[inline]
     pub fn with<X>(self, content: &X) -> Section<'section, Next<C, &X>>
     where
-        X: Content + ?Sized,
+        X: Content + ?Sized + Clone,
     {
-        Section {
+        let rst = Section {
             blocks: self.blocks,
             contents: self.contents.combine(content),
-        }
+        };
+
+        println!("Section<C>: {:?}", rst);
+
+        rst
     }
 
     /// The section without the last `Content` in the stack
     #[inline]
     pub fn without_last(self) -> Section<'section, C::Previous>
     {
-        Section {
+        let rst = Section {
             blocks: self.blocks,
             contents: self.contents.crawl_back(),
-        }
+        };
+
+        println!("Section<C::Previous>: {:?}", rst);
+
+        rst
     }
 
     /// Render this section once to the provided `Encoder`.
-    pub fn render<E>(&self, encoder: &mut E) -> Result<(), E::Error>
+    pub fn render<E, IC: Content>(&self, encoder: &mut E, content: Option<&IC>) -> Result<(), E::Error>
     where
         E: Encoder,
     {
+        println!("render<E, IC: Content>() : content: {:?}", content);
         let mut index = 0;
 
-        while let Some(block) = self.blocks.get(index) {
+        while let Some(block) = self.blocks.get(index) { // 消耗本次 render 所需的一层 block
             index += 1;
-
             encoder.write_unescaped(block.html)?;
 
             match block.tag {
                 Tag::Escaped => {
-                    self.contents.render_field_escaped(block.hash, block.name, encoder)?;
+                    if block.name == "$value" {
+                        if let Some(content) = content {
+                            content.render_escaped(encoder)?; 
+                        }
+                    } else {
+                        self.contents.render_field_escaped(block.hash, block.name, encoder)?;
+                    }
                 }
                 Tag::Unescaped => {
-                    self.contents.render_field_unescaped(block.hash, block.name, encoder)?;
+                    if block.name == "$value" {
+                        if let Some(content) = content {
+                            content.render_unescaped(encoder)?; 
+                        }
+                    } else {
+                        self.contents.render_field_unescaped(block.hash, block.name, encoder)?;
+                    }
+                    
                 }
                 Tag::Section => {
+                    println!("2 block:");
+                    for block in self.blocks {
+                        println!("{:?}", block);
+                    }
+
+                    println!("self.contents.render_field_section() : slice: {:?}, hash={}, name={}", index..index + block.children as usize, block.hash, block.name);
+
                     self.contents.render_field_section(
-                        block.hash,
-                        block.name,
-                        self.slice(index..index + block.children as usize),
+                        block.hash, // block0.hash，block0.child = 2
+                        block.name,  // block0.name
+                        self.slice(index..index + block.children as usize), // 消去本次 render_field_section 后剩下的 子blocks[1，2]， block3 不是 block0 的子 block
                         encoder,
                     )?;
                     index += block.children as usize;
@@ -108,6 +144,15 @@ where
                     index += block.children as usize;
                 }
                 Tag::NotNone => {
+
+                    println!("3 block:");
+                    for block in self.blocks {
+                        println!("{:?}", block);
+                    }
+
+                    println!("slice: {:?}, len={}, hash={}, name={}", index..index + block.children as usize, self.blocks.len(), block.hash, block.name);
+
+
                     let rst = self.contents.render_field_notnone_section(
                         block.hash,
                         block.name,
@@ -115,9 +160,12 @@ where
                         encoder,
                     )?;
 
-                    if !rst {
+                    if rst {
+                        index += 1;
+                    } else {
                         index += block.children as usize;
                     }
+                    // index += block.children as usize;
                 }
                 _ => {}
             }

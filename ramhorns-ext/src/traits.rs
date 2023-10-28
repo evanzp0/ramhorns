@@ -18,11 +18,11 @@ use crate::Content;
 /// so that self-referencing `Content`s don't blow up the stack on compilation.
 pub trait Combine {
     /// First type for the result tuple
-    type I: Content + Copy + Sized;
+    type I: Content + Copy + Sized + std::fmt::Debug;
     /// Second type for the result tuple
-    type J: Content + Copy + Sized;
+    type J: Content + Copy + Sized + std::fmt::Debug;
     /// Third type for the result tuple
-    type K: Content + Copy + Sized;
+    type K: Content + Copy + Sized + std::fmt::Debug;
 
     /// Type when we crawl back one item
     type Previous: ContentSequence;
@@ -36,7 +36,7 @@ pub trait Combine {
 
 /// Helper trait that re-exposes `render_field_x` methods of a `Content` trait,
 /// calling those methods internally on all `Content`s contained within `Self`.
-pub trait ContentSequence: Combine + Sized + Copy {
+pub trait ContentSequence: Combine + Sized + Copy + std::fmt::Debug {
     /// Render a field by the hash **or** string of its name.
     ///
     /// This will escape HTML characters, eg: `<` will become `&lt;`.
@@ -131,10 +131,10 @@ impl ContentSequence for () {}
 
 impl<A, B, C, D> Combine for (A, B, C, D)
 where
-    A: Content + Copy,
-    B: Content + Copy,
-    C: Content + Copy,
-    D: Content + Copy,
+    A: Content + Copy + std::fmt::Debug,
+    B: Content + Copy + std::fmt::Debug,
+    C: Content + Copy + std::fmt::Debug,
+    D: Content + Copy + std::fmt::Debug,
 {
     type I = B;
     type J = C;
@@ -154,10 +154,10 @@ where
 
 impl<A, B, C, D> ContentSequence for (A, B, C, D)
 where
-    A: Content + Copy,
-    B: Content + Copy,
-    C: Content + Copy,
-    D: Content + Copy,
+    A: Content + Copy + std::fmt::Debug,
+    B: Content + Copy + std::fmt::Debug,
+    C: Content + Copy + std::fmt::Debug,
+    D: Content + Copy + std::fmt::Debug,
 {
     #[inline]
     fn render_field_escaped<E: Encoder>(
@@ -203,13 +203,28 @@ where
         P: ContentSequence,
         E: Encoder,
     {
-        if !self.3.render_field_section(hash, name, section, encoder)? {
+        println!("ContentSequence: {:?}", self);
+
+        let rst = self.3.render_field_section(hash, name, section, encoder)?;
+        println!("self.3.render_field_section() = {}", rst);
+        if !rst {
             let section = section.without_last();
-            if !self.2.render_field_section(hash, name, section, encoder)? {
+            println!("section3.without_last(): {:?}", section);
+
+            let rst = self.2.render_field_section(hash, name, section, encoder)?;
+            println!("self.2.render_field_section() = {}", rst);
+            if !rst {
                 let section = section.without_last();
-                if !self.1.render_field_section(hash, name, section, encoder)? {
+                println!("section2.without_last(): {:?}", section);
+
+                let rst = self.1.render_field_section(hash, name, section, encoder)?;
+                println!("self.1.render_field_section() = {}", rst);
+                if !rst {
                     let section = section.without_last();
-                    self.0.render_field_section(hash, name, section, encoder)?;
+                    println!("section1.without_last(): {:?}", section);
+
+                    let rst = self.0.render_field_section(hash, name, section, encoder)?;
+                    println!("self.0.render_field_section() = {}", rst);
                 }
             }
         }
@@ -233,7 +248,7 @@ where
             && !self.1.render_field_inverse(hash, name, section, encoder)?
             && !self.0.render_field_inverse(hash, name, section, encoder)?
         {
-            section.render(encoder)?;
+            section.render(encoder, Option::<&()>::None)?;
         }
         Ok(())
     }
@@ -250,19 +265,32 @@ where
         P: ContentSequence,
         E: Encoder,
     {
-        let mut rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
-        if rst {
+        println!("ContentSequence: {:?}", self);
+
+        let rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
+        println!("self.3.render_field_notnone_section() = {}", rst);
+        if !rst {
             let section = section.without_last();
-            rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
-            if rst {
+            println!("section3.without_last(): {:?}", section);
+
+            let rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
+            println!("self.2.render_field_notnone_section() = {}", rst);
+            if !rst {
                 let section = section.without_last();
-                rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
-                if rst {
+                println!("section2.without_last(): {:?}", section);
+
+                let rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
+                println!("self.1.render_field_notnone_section() = {}", rst);
+                if !rst {
                     let section = section.without_last();
-                    rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
+                    println!("section1.without_last(): {:?}", section);
+
+                    let rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
+                    println!("self.0.render_field_notnone_section() = {}", rst);
                 }
             }
         }
-        Ok(rst)
+
+        Ok(true)
     }
 }

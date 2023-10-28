@@ -25,6 +25,7 @@ mod section;
 pub use section::Section;
 pub use parse::Tag;
 
+#[derive(Debug)]
 /// A preprocessed form of the plain text template, ready to be rendered
 /// with data contained in types implementing the `Content` trait.
 pub struct Template<'tpl> {
@@ -80,7 +81,7 @@ impl<'tpl> Template<'tpl> {
     }
 
     /// Render this `Template` with a given `Content` to a `String`.
-    pub fn render<C: crate::Content>(&self, content: &C) -> String {
+    pub fn render<C: crate::Content + Clone>(&self, content: &C) -> String {
         let mut capacity = content.capacity_hint(self);
 
         // Add extra 25% extra capacity for HTML escapes and an odd double variable use.
@@ -89,13 +90,16 @@ impl<'tpl> Template<'tpl> {
         let mut buf = String::with_capacity(capacity);
 
         // Ignore the result, cannot fail
-        let _ = Section::new(&self.blocks).with(content).render(&mut buf);
+        let rst = Section::new(&self.blocks)
+            .with(content);
+        
+        let _ = rst.render(&mut buf, Option::<&()>::None);
 
         buf
     }
 
     /// Render this `Template` with a given `Content` to a writer.
-    pub fn render_to_writer<W, C>(&self, writer: &mut W, content: &C) -> io::Result<()>
+    pub fn render_to_writer<W, C: Clone>(&self, writer: &mut W, content: &C) -> io::Result<()>
     where
         W: io::Write,
         C: Content,
@@ -103,11 +107,11 @@ impl<'tpl> Template<'tpl> {
         let mut encoder = EscapingIOEncoder::new(writer);
         Section::new(&self.blocks)
             .with(content)
-            .render(&mut encoder)
+            .render(&mut encoder, Option::<&()>::None)
     }
 
     /// Render this `Template` with a given `Content` to a file.
-    pub fn render_to_file<P, C>(&self, path: P, content: &C) -> io::Result<()>
+    pub fn render_to_file<P, C: Clone>(&self, path: P, content: &C) -> io::Result<()>
     where
         P: AsRef<Path>,
         C: Content,
@@ -119,7 +123,7 @@ impl<'tpl> Template<'tpl> {
 
         Section::new(&self.blocks)
             .with(content)
-            .render(&mut encoder)
+            .render(&mut encoder, Option::<&()>::None)
     }
 
     /// Get a reference to a source this `Template` was created from.
@@ -246,7 +250,7 @@ mod test {
 
     #[test]
     fn constructs_nested_sections_with_dot_correctly() {
-        let source = "<body><h1>{{site title}}</h1>{{^archive posts}}<article>{{name}}</article>{{/posts archive}}</body>";
+        let source = "<body><h1>{{site title}}</h1>{{^archive posts}}<article>{{name}}</article>{{/archive posts}}</body>";
         let tpl = Template::new(source).unwrap();
 
         assert_eq!(

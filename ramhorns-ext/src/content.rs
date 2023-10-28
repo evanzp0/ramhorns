@@ -20,7 +20,7 @@ use std::ops::Deref;
 /// Trait allowing the rendering to quickly access data stored in the type that
 /// implements it. You needn't worry about implementing it, in virtually all
 /// cases the `#[derive(Content)]` attribute above your types should be sufficient.
-pub trait Content {
+pub trait Content: std::fmt::Debug {
     /// Marks whether this content is truthy. Used when attempting to render a section.
     #[inline]
     fn is_truthy(&self) -> bool {
@@ -52,17 +52,22 @@ pub trait Content {
 
     /// Render a section with self.
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
+        IC: Content,
     {
+        println!("render_section<C, E>: section: {:?}", section);
+        println!("render_section<C, E>: self: {:?}", self);
+
         if self.is_truthy() {
-            section.render(encoder)
+            section.render(encoder, content)
         } else {
             Ok(())
         }
@@ -70,17 +75,19 @@ pub trait Content {
 
     /// Render a section with self.
     #[inline]
-    fn render_inverse<C, E>(
+    fn render_inverse<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
+        IC: Content,
     {
         if !self.is_truthy() {
-            section.render(encoder)
+            section.render(encoder, content)
         } else {
             Ok(())
         }
@@ -88,17 +95,22 @@ pub trait Content {
 
     /// Render a section with self.
     #[inline]
-    fn render_notnone_section<C, E>(
+    fn render_notnone_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
+        IC: Content,
     {
+        println!("render_notnone_section<C, E>: section: {:?}", section);
+        println!("render_notnone_section<C, E>: self: {:?}", self);
+
         if self.is_truthy() {
-            section.render(encoder)
+            section.render(encoder, content)
         } else {
             Ok(())
         }
@@ -180,7 +192,7 @@ pub trait Content {
         C: ContentSequence,
         E: Encoder,
     {
-        Ok(true)
+        Ok(false)
     }
 }
 
@@ -351,24 +363,46 @@ impl<T: Content> Content for Option<T> {
     }
 
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         if let Some(ref item) = self {
-            item.render_section(section, encoder)?;
+            item.render_section(section, encoder, Some(item))?;
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        if let Some(ref item) = self {
+            item.render_notnone_section(section, encoder, Some(item))?;
         }
 
         Ok(())
     }
 }
 
-impl<T: Content, U> Content for Result<T, U> {
+impl<T: Content, U> Content for Result<T, U> 
+where
+    U: std::fmt::Debug,
+{
     #[inline]
     fn is_truthy(&self) -> bool {
         self.is_ok()
@@ -401,17 +435,36 @@ impl<T: Content, U> Content for Result<T, U> {
     }
 
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         if let Ok(item) = self {
-            item.render_section(section, encoder)?;
+            item.render_section(section, encoder, Some(item))?;
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        if let Ok(item) = self {
+            item.render_notnone_section(section, encoder, Some(item))?;
         }
 
         Ok(())
@@ -425,17 +478,36 @@ impl<T: Content> Content for Vec<T> {
     }
 
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         for item in self.iter() {
-            item.render_section(section, encoder)?;
+            item.render_section(section, encoder, Some(item))?;
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        for item in self.iter() {
+            item.render_notnone_section(section, encoder, Some(item))?;
         }
 
         Ok(())
@@ -449,17 +521,36 @@ impl<T: Content> Content for [T] {
     }
 
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         for item in self.iter() {
-            item.render_section(section, encoder)?;
+            item.render_section(section, encoder, Some(item))?;
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        for item in self.iter() {
+            item.render_notnone_section(section, encoder, Some(item))?;
         }
 
         Ok(())
@@ -473,17 +564,36 @@ impl<T: Content, const N: usize> Content for [T; N] {
     }
 
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         for item in self.iter() {
-            item.render_section(section, encoder)?;
+            item.render_section(section, encoder, Some(item))?;
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        for item in self.iter() {
+            item.render_notnone_section(section, encoder, Some(item))?;
         }
 
         Ok(())
@@ -497,17 +607,36 @@ impl<T: Content, const N: usize> Content for ArrayVec<T, N> {
     }
 
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         for item in self.iter() {
-            item.render_section(section, encoder)?;
+            item.render_section(section, encoder, Some(item))?;
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        for item in self.iter() {
+            item.render_notnone_section(section, encoder, Some(item))?;
         }
 
         Ok(())
@@ -516,9 +645,9 @@ impl<T: Content, const N: usize> Content for ArrayVec<T, N> {
 
 impl<K, V, S> Content for HashMap<K, V, S>
 where
-    K: Borrow<str> + Hash + Eq,
-    V: Content,
-    S: BuildHasher,
+    K: Borrow<str> + Hash + Eq + std::fmt::Debug + Clone,
+    V: Content + Clone,
+    S: BuildHasher + Clone,
 {
     fn is_truthy(&self) -> bool {
         !self.is_empty()
@@ -526,17 +655,37 @@ where
 
     /// Render a section with self.
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         if self.is_truthy() {
-            section.with(self).render(encoder)
+            section.with(self).render(encoder, Option::<&()>::None)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Render a section with self.
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        if self.is_truthy() {
+            section.with(self).render(encoder, Option::<&()>::None)
         } else {
             Ok(())
         }
@@ -579,7 +728,24 @@ where
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_section(section, encoder).map(|_| true),
+            Some(v) => v.render_section(section, encoder, Some(v)).map(|_| true),
+            None => Ok(false),
+        }
+    }
+
+    fn render_field_notnone_section<C, E>(
+        &self,
+        _: u64,
+        name: &str,
+        section: Section<C>,
+        encoder: &mut E,
+    ) -> Result<bool, E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        match self.get(name) {
+            Some(v) => v.render_notnone_section(section, encoder, Some(v)).map(|_| true),
             None => Ok(false),
         }
     }
@@ -596,7 +762,7 @@ where
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_inverse(section, encoder).map(|_| true),
+            Some(v) => v.render_inverse(section, encoder, Some(v)).map(|_| true),
             None => Ok(false),
         }
     }
@@ -604,8 +770,8 @@ where
 
 impl<K, V> Content for BTreeMap<K, V>
 where
-    K: Borrow<str> + Ord,
-    V: Content,
+    K: Borrow<str> + Ord + std::fmt::Debug + Clone,
+    V: Content + Clone,
 {
     fn is_truthy(&self) -> bool {
         !self.is_empty()
@@ -613,17 +779,37 @@ where
 
     /// Render a section with self.
     #[inline]
-    fn render_section<C, E>(
+    fn render_section<C, E, IC>(
         &self,
         section: Section<C>,
         encoder: &mut E,
+        _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         if self.is_truthy() {
-            section.with(self).render(encoder)
+            section.with(self).render(encoder, Option::<&()>::None)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Render a section with self.
+    #[inline]
+    fn render_notnone_section<C, E, IC>(
+        &self,
+        section: Section<C>,
+        encoder: &mut E,
+        _content: Option<&IC>,
+    ) -> Result<(), E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        if self.is_truthy() {
+            section.with(self).render(encoder, Option::<&()>::None)
         } else {
             Ok(())
         }
@@ -666,7 +852,24 @@ where
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_section(section, encoder).map(|_| true),
+            Some(v) => v.render_section(section, encoder, Some(v)).map(|_| true),
+            None => Ok(false),
+        }
+    }
+
+    fn render_field_notnone_section<C, E>(
+        &self,
+        _: u64,
+        name: &str,
+        section: Section<C>,
+        encoder: &mut E,
+    ) -> Result<bool, E::Error>
+    where
+        C: ContentSequence,
+        E: Encoder,
+    {
+        match self.get(name) {
+            Some(v) => v.render_notnone_section(section, encoder, Some(v)).map(|_| true),
             None => Ok(false),
         }
     }
@@ -683,7 +886,7 @@ where
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_inverse(section, encoder).map(|_| true),
+            Some(v) => v.render_inverse(section, encoder, Some(v)).map(|_| true),
             None => Ok(false),
         }
     }
@@ -692,7 +895,11 @@ where
 macro_rules! impl_pointer_types {
     ($( $ty:ty $(: $bounds:ident)? ),*) => {
         $(
-            impl<T: Content $(+ $bounds)? + ?Sized> Content for $ty {
+            impl<T> Content for $ty 
+            where 
+                T: Content $(+ $bounds)? + ?Sized + std::fmt::Debug + Clone,
+                <T as ToOwned>::Owned: std::fmt::Debug,
+            {
                 #[inline]
                 fn is_truthy(&self) -> bool {
                     self.deref().is_truthy()
@@ -714,29 +921,45 @@ macro_rules! impl_pointer_types {
                 }
 
                 #[inline]
-                fn render_section<C, E>(
+                fn render_section<C, E, IC>(
                     &self,
                     section: Section<C>,
                     encoder: &mut E,
+                    _content: Option<&IC>
                 ) -> Result<(), E::Error>
                 where
                     C: ContentSequence,
                     E: Encoder,
                 {
-                    self.deref().render_section(section, encoder)
+                    self.deref().render_section(section, encoder, Some(self))
                 }
 
                 #[inline]
-                fn render_inverse<C, E>(
+                fn render_inverse<C, E, IC>(
                     &self,
                     section: Section<C>,
                     encoder: &mut E,
+                    _content: Option<&IC>
                 ) -> Result<(), E::Error>
                 where
                     C: ContentSequence,
                     E: Encoder,
                 {
-                    self.deref().render_inverse(section, encoder)
+                    self.deref().render_inverse(section, encoder, Some(self))
+                }
+
+                #[inline]
+                fn render_notnone_section<C, E, IC>(
+                    &self,
+                    section: Section<C>,
+                    encoder: &mut E,
+                    _content: Option<&IC>
+                ) -> Result<(), E::Error>
+                where
+                    C: ContentSequence,
+                    E: Encoder,
+                {
+                    self.deref().render_notnone_section(section, encoder, Some(self))
                 }
 
                 #[inline]
@@ -772,6 +995,8 @@ macro_rules! impl_pointer_types {
                     E: Encoder,
                 {
                     let def = self.deref();
+                    println!("render_field_section<C, E>: self: {:?}", def);
+                    println!("render_field_section<C, E>: name: {:?}, section:{:?}", name, section);
                     
                     let rst = def.render_field_section(hash, name, section, encoder)?;
 

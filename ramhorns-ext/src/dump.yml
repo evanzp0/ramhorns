@@ -1,0 +1,115 @@
+Template 
+  {
+    blocks: 
+      [
+        Block { html: "\n        ", name: "bb", hash: 19044748602007918, tag: Section, children: 2 },
+        Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }, 
+        Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }, 
+        Block { html: "", name: "", hash: 0, tag: Tail, children: 0 }
+      ], 
+    capacity_hint: 33, 
+    source: "\n        {{#bb.prop1}}\n            a,\n        {{/bb.prop1}}\n    " 
+  }
+
+Section<()>: 
+  Section { 
+    blocks: [
+      Block { html: "\n        ", name: "bb", hash: 19044748602007918, tag: Section, children: 2 }, 
+      Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }, 
+      Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }, 
+      Block { html: "", name: "", hash: 0, tag: Tail, children: 0 }
+    ], 
+    contents: () 
+  }
+
+------------ sa render --------------
+Section<C>: => sa.render(&mut StringBuffer)
+  Section { 
+    blocks: [
+      Block { html: "\n        ", name: "bb", hash: 19044748602007918, tag: Section, children: 2 }, 
+      Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }, 
+      Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }, 
+      Block { html: "", name: "", hash: 0, tag: Tail, children: 0 }
+    ], 
+    contents: ( (), (), (), Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } } ) 
+  }
+
+  --------------
+  2 block:
+    0 Block { html: "\n        ", name: "bb", hash: 19044748602007918, tag: Section, children: 2 }
+    1 Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }
+    2 Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }
+    3 Block { html: "", name: "", hash: 0, tag: Tail, children: 0 }
+    self.contents.render_field_section():
+      slice: 1..3, hash=19044748602007918, name=bb, blocks[1, 2]
+  --------------
+
+  Section<C: ContentSequence>: Section.slice(1..3)
+    Section { 
+      blocks: [
+        Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }, 
+        Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }
+      ], 
+      contents: ((), (), (), Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } }) 
+    }
+
+  self.contents.render_field_section():
+    ContentSequence: ((), (), (), Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } })
+
+    sa.render_field_section(hash, name, section, encoder)-> sa.bb.render_section(section, encoder) -> section.with(bb).render(encoder)
+
+----- sb render -------
+
+Section<C>: 
+Section { 
+  blocks: [
+    Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }, 
+    Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }
+  ], 
+  contents: ((), (), 
+    Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } }, 
+    Sb { name: "my_name", prop1: [1, 2, 3] }
+  )
+}
+
+  ------------
+  2 block:
+    0 Block { html: "", name: "prop1", hash: 18071763218198546876, tag: Section, children: 1 }
+    1 Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }
+  self.contents.render_field_section() : 
+    slice: 1..2, hash=18071763218198546876, name=prop1, blocks[1]
+  ------------
+  Section<C: ContentSequence>: 
+    Section { 
+      blocks: [
+        Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }
+      ], 
+      contents: ((), (), 
+        Sa { bb: Sb { name: "my_name", prop1:: [1, 2, 3] } }, 
+        Sb { name: "my_name", prop1: [1, 2, 3] }
+      )
+    }
+  self.contents.render_field_section():
+    ContentSequence: ((), (), Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } }, Sb { name: "my_name", prop1: [1, 2, 3] })
+
+  render_field_section<C, E>: -> self.3.render_field_section()
+    name: "prop1", 
+    section:Section { 
+      blocks: [Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }], 
+      contents: ((), (), Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } }, Sb { name: "my_name", prop1: [1, 2, 3] }) }
+
+  self.3.render_field_section() = true
+  content.render_section()
+  
+  render_section<C, E>: 
+    section: Section { 
+      blocks: [Block { html: "\n            a,\n        ", name: "", hash: 0, tag: Closing, children: 0 }], 
+      contents: ((), (), Sa { bb: Sb { name: "my_name", prop1: [1, 2, 3] } }, Sb { name: "my_name", prop1: [1, 2, 3] }) 
+    }
+
+  render_section<C, E>: self: 1
+     1.is_truthy() = true
+     section.render(encoder)
+
+-------- 1 render ---------------
+section.render() 只输出了 Close block 中的 html 值，就退出了
