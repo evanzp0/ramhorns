@@ -267,30 +267,30 @@ where
     {
         println!("ContentSequence: {:?}", self);
 
-        let rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
+        let mut rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
         println!("self.3.render_field_notnone_section() = {}", rst);
         if !rst {
             let section = section.without_last();
             println!("section3.without_last(): {:?}", section);
 
-            let rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
+            rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
             println!("self.2.render_field_notnone_section() = {}", rst);
             if !rst {
                 let section = section.without_last();
                 println!("section2.without_last(): {:?}", section);
 
-                let rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
+                rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
                 println!("self.1.render_field_notnone_section() = {}", rst);
                 if !rst {
                     let section = section.without_last();
                     println!("section1.without_last(): {:?}", section);
 
-                    let rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
+                    rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
                     println!("self.0.render_field_notnone_section() = {}", rst);
                 }
             }
         }
 
-        Ok(true)
+        Ok(rst)
     }
 }

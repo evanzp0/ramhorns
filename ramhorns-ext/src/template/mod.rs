@@ -250,7 +250,7 @@ mod test {
 
     #[test]
     fn constructs_nested_sections_with_dot_correctly() {
-        let source = "<body><h1>{{site title}}</h1>{{^archive posts}}<article>{{name}}</article>{{/archive posts}}</body>";
+        let source = "<body><h1>{{site title}}</h1>{{^archive posts}}<article>{{name}}</article>{{/posts archive}}</body>";
         let tpl = Template::new(source).unwrap();
 
         assert_eq!(

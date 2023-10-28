@@ -506,9 +506,9 @@ impl<T: Content> Content for Vec<T> {
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
+        // for item in self.iter() {
+        //     item.render_notnone_section(section, encoder, Some(item))?;
+        // }
 
         Ok(())
     }

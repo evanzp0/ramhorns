@@ -154,7 +154,7 @@ impl<'tpl> Template<'tpl> {
                             _ => return Err(Error::UnclosedTag),
                         }
                     }
-                    println!("st: {}, name = {}", self.blocks.len(), name);
+                    // println!("st: {}, name = {}", self.blocks.len(), name);
                     // block 中本次新增元素数
                     let d = self.blocks.len() - tail_idx - 1;
 
@@ -277,10 +277,10 @@ impl<'tpl> Template<'tpl> {
             lex.extras = Braces::Two;
         }
 
-        println!("1 block:");
-        for block in &self.blocks {
-            println!("{:?}", block);
-        }
+        // println!("1 block:");
+        // for block in &self.blocks {
+        //     println!("{:?}", block);
+        // }
 
         Ok(last)
     }

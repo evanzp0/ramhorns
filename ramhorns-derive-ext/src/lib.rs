@@ -210,20 +210,24 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
 
     let render_field_section = fields.iter().map(|Field { field, hash, .. }| {
         quote! {
-            #hash => self.#field.render_section(section, encoder).map(|_| true),
+            #hash => self.#field.render_section(section, encoder, Option::<&()>::None).map(|_| true),
         }
     });
 
     let render_field_inverse = fields.iter().map(|Field { field, hash, .. }| {
         quote! {
-            #hash => self.#field.render_inverse(section, encoder).map(|_| true),
+            #hash => self.#field.render_inverse(section, encoder, Option::<&()>::None).map(|_| true),
         }
     });
 
     let render_field_notnone_section = fields.iter().map(|Field { field, hash, .. }| {
         quote! {
-            // #hash => self.#field.render_notnone_section(section, encoder).map(|_| true),
-            #hash => Ok(self.#field.is_truthy()),
+            // #hash => self.#field.render_notnone_section(section, encoder, Option::<&()>::None).map(|_| true),
+            // #hash => Ok(self.#field.is_truthy()),
+            #hash => {
+                self.#field.render_notnone_section(section, encoder, Option::<&()>::None)?;
+                Ok(self.#field.is_truthy())
+            }
         }
     });
 
@@ -248,12 +252,21 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
             }
 
             #[inline]
-            fn render_section<C, E>(&self, section: ::ramhorns_ext::Section<C>, encoder: &mut E) -> std::result::Result<(), E::Error>
+            fn render_section<C, E, IC>(&self, section: ::ramhorns_ext::Section<C>, encoder: &mut E, _content: Option<&IC>) -> std::result::Result<(), E::Error>
             where
                 C: ::ramhorns_ext::traits::ContentSequence,
                 E: ::ramhorns_ext::encoding::Encoder,
             {
-                section.with(self).render(encoder)
+                section.with(self).render(encoder, Option::<&()>::None)
+            }
+
+            #[inline]
+            fn render_notnone_section<C, E, IC>(&self, section: ::ramhorns_ext::Section<C>, encoder: &mut E, _content: Option<&IC>) -> std::result::Result<(), E::Error>
+            where
+                C: ::ramhorns_ext::traits::ContentSequence,
+                E: ::ramhorns_ext::encoding::Encoder,
+            {
+                section.with(self).render(encoder, Option::<&()>::None)
             }
 
             #[inline]
