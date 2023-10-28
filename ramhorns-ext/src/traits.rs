@@ -257,23 +257,23 @@ where
         P: ContentSequence,
         E: Encoder,
     {
-        let rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
+        let mut rst = self.3.render_field_notnone_section(hash, name, section, encoder)?;
         if !rst {
             let section = section.without_last();
 
-            let rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
+            rst = self.2.render_field_notnone_section(hash, name, section, encoder)?;
             if !rst {
                 let section = section.without_last();
 
-                let rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
+                rst = self.1.render_field_notnone_section(hash, name, section, encoder)?;
                 if !rst {
                     let section = section.without_last();
 
-                    self.0.render_field_notnone_section(hash, name, section, encoder)?;
+                    rst = self.0.render_field_notnone_section(hash, name, section, encoder)?;
                 }
             }
         }
 
-        Ok(true)
+        Ok(rst)
     }
 }

@@ -223,7 +223,11 @@ pub fn content_derive(input: TokenStream) -> TokenStream {
     let render_field_notnone_section = fields.iter().map(|Field { field, hash, .. }| {
         quote! {
             // #hash => self.#field.render_notnone_section(section, encoder, Option::<&()>::None).map(|_| true),
-            #hash => Ok(self.#field.is_truthy()),
+            // #hash => Ok(self.#field.is_truthy()),
+            #hash => {
+                self.#field.render_notnone_section(section, encoder, Option::<&()>::None)?;
+                Ok(self.#field.is_truthy())
+            }
         }
     });
 

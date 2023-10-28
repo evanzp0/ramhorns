@@ -135,9 +135,7 @@ where
                         encoder,
                     )?;
 
-                    if rst {
-                        index += 1;
-                    } else {
+                    if !rst {
                         index += block.children as usize;
                     }
                     // index += block.children as usize;

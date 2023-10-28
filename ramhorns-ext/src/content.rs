@@ -377,18 +377,14 @@ impl<T: Content> Content for Option<T> {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
-        if let Some(ref item) = self {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -449,19 +445,15 @@ where
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
-        if let Ok(item) = self {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
-        Ok(())
+         Ok(())
     }
 }
 
@@ -492,18 +484,14 @@ impl<T: Content> Content for Vec<T> {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -535,18 +523,14 @@ impl<T: Content> Content for [T] {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -578,18 +562,14 @@ impl<T: Content, const N: usize> Content for [T; N] {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -621,18 +601,14 @@ impl<T: Content, const N: usize> Content for ArrayVec<T, N> {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
-        for item in self.iter() {
-            item.render_notnone_section(section, encoder, Some(item))?;
-        }
-
         Ok(())
     }
 }
@@ -731,15 +707,15 @@ where
         &self,
         _: u64,
         name: &str,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
     ) -> Result<bool, E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_notnone_section(section, encoder, Some(v)).map(|_| true),
+            Some(_) => Ok(true),
             None => Ok(false),
         }
     }
@@ -872,15 +848,15 @@ where
         &self,
         _: u64,
         name: &str,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
     ) -> Result<bool, E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => v.render_inverse(section, encoder, Some(v)).map(|_| true),
+            Some(_) => Ok(true),
             None => Ok(false),
         }
     }
