@@ -383,8 +383,8 @@ impl<T: Content> Content for Option<T> {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
@@ -451,8 +451,8 @@ where
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
@@ -490,8 +490,8 @@ impl<T: Content> Content for Vec<T> {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
@@ -529,8 +529,8 @@ impl<T: Content> Content for [T] {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
@@ -568,8 +568,8 @@ impl<T: Content, const N: usize> Content for [T; N] {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
@@ -607,8 +607,8 @@ impl<T: Content, const N: usize> Content for ArrayVec<T, N> {
     #[inline]
     fn render_notnone_section<C, E, IC>(
         &self,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
         _content: Option<&IC>,
     ) -> Result<(), E::Error>
     where
@@ -713,15 +713,15 @@ where
         &self,
         _: u64,
         name: &str,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
     ) -> Result<bool, E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => Ok(true),
+            Some(_) => Ok(true),
             None => Ok(false),
         }
     }
@@ -854,15 +854,15 @@ where
         &self,
         _: u64,
         name: &str,
-        section: Section<C>,
-        encoder: &mut E,
+        _section: Section<C>,
+        _encoder: &mut E,
     ) -> Result<bool, E::Error>
     where
         C: ContentSequence,
         E: Encoder,
     {
         match self.get(name) {
-            Some(v) => Ok(true),
+            Some(_) => Ok(true),
             None => Ok(false),
         }
     }
