@@ -16,7 +16,7 @@ What else do you want, a sticker?
 
 ```toml
 [dependencies]
-ramhorns-ext = { version = "0.15", features = ["chrono", "uuid"] }
+ramhorns-ext = { version = "0.17", features = ["chrono", "uuid"] }
 ```
 
 ### Example
