@@ -70,7 +70,7 @@ impl From<ParseError> for Error {
 
 #[derive(Logos)]
 #[logos(
-    skip r"[. ]+",
+    skip r"[ ]+",
     extras = Braces,
 )]
 #[derive(Debug)]
@@ -83,7 +83,7 @@ enum Closing {
     #[token("}}}")]
     Match,
 
-    #[regex(r"[^. \}]+")]
+    #[regex(r"[^ \}]+")]
     Ident,
 }
 

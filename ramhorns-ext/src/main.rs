@@ -28,11 +28,11 @@ fn main() {
     // ";
 
     let s = "
-        {{?bb.prop1}}
-            {{#bb.prop1}}
+        {{?bb prop1}}
+            {{#bb prop1}}
                 {{$value}} a,
-            {{/bb.prop1}}
-        {{/bb.prop1}}
+            {{/bb prop1}}
+        {{/bb prop1}}
     ";
 
     let tpl = Template::new(s).unwrap();
