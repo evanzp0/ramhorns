@@ -66,9 +66,7 @@ impl<'tpl> Template<'tpl> {
             capacity_hint: 0,
             source,
         };
-        println!("tpl = {:?}", tpl);
         let last = tpl.parse(unsafe_source, partials)?;
-        println!("last = {:?}", last);
         let tail = &unsafe_source[last..].trim_end();
         tpl.blocks.push(Block::nameless(tail, Tag::Tail));
         tpl.capacity_hint += tail.len();

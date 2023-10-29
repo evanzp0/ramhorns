@@ -154,7 +154,7 @@ impl<'tpl> Template<'tpl> {
                             _ => return Err(Error::UnclosedTag),
                         }
                     }
-                    // println!("st: {}, name = {}", self.blocks.len(), name);
+                    
                     // block 中本次新增元素数
                     let d = self.blocks.len() - tail_idx - 1;
 
@@ -209,8 +209,6 @@ impl<'tpl> Template<'tpl> {
 
                         let head = &mut self.blocks[head_idx];
                         head.children = (tail_idx - head_idx) as u32;
-
-                        // println!("name = {}, head_idx = {}, head= {:?}", name, head_idx, head);
 
                         if head.hash != hash {
                             return Err(Error::UnclosedSection(head.name.into()));
@@ -277,11 +275,6 @@ impl<'tpl> Template<'tpl> {
             lex.extras = Braces::Two;
         }
 
-        // println!("1 block:");
-        // for block in &self.blocks {
-        //     println!("{:?}", block);
-        // }
-
         Ok(last)
     }
 }
@@ -300,6 +293,5 @@ mod tests {
         {{/t1}}
         ";
         let _tpl = Template::new(s).unwrap();
-        println!("--------------")
     }
 }
