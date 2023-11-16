@@ -126,6 +126,7 @@ where
 
                     println!("self.contents.render_field_section() : slice: {:?}, hash={}, name={}", index..index + block.children as usize, block.hash, block.name);
 
+                    // contents 是实现了 ContentSequence trait
                     self.contents.render_field_section(
                         block.hash, // block0.hash，block0.child = 2
                         block.name,  // block0.name
